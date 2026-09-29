@@ -3,12 +3,15 @@ import {
   PieChart, Pie, Cell, 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
-import { authService } from '../services/auth.service';
-import { Link } from 'react-router-dom';
+import { authService, type User } from '../services/auth.service';
+// import { Link } from 'react-router-dom';
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
 
 export default function Dashboard() {
 
   const [user, setUser] = useState<User | null>(null);
+  const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -16,8 +19,8 @@ export default function Dashboard() {
   }, []);
 
   const betsData = [
-    { name: 'Ganadas', value: 12 },
-    { name: 'Perdidas', value: 5 }
+    { name: 'Ganadas', value: 2 },
+    { name: 'Perdidas', value: 4 }
   ];
 
   const DONUT_COLORS = ['#10b981', '#ef4444']; 
@@ -32,6 +35,102 @@ export default function Dashboard() {
   ];
 
   if (!user) return <div>Cargando...</div>;
+
+  const handleSnailPay = async () => {
+    if (!user) return;
+    const MySwal = withReactContent(Swal);
+
+    const { value: formValues } = await MySwal.fire({
+      title: 'Recarga SnailPay',
+      html: `
+        <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; margin-top: 10px;">
+          <div>
+            <label style="font-size: 0.875rem; color: #475569;">Monto a recargar ($)</label>
+            <input id="swal-amount" class="swal2-input" type="number" min="1" placeholder="Ej: 500" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+          
+          <div>
+            <label style="font-size: 0.875rem; color: #475569;">Nombre en la tarjeta</label>
+            <input id="swal-name" class="swal2-input" placeholder="Titular de la cuenta" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="font-size: 0.875rem; color: #475569;">Número de tarjeta</label>
+            <input id="swal-card" class="swal2-input" placeholder="0000 0000 0000 0000" maxlength="16" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+              <label style="font-size: 0.875rem; color: #475569;">Vencimiento</label>
+              <input id="swal-exp" class="swal2-input" placeholder="MM/YY" maxlength="5" style="margin: 0; width: 100%; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 0.875rem; color: #475569;">CVV</label>
+              <input id="swal-cvv" class="swal2-input" type="password" placeholder="123" maxlength="4" style="margin: 0; width: 100%; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Procesar Pago',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#10b981',
+      preConfirm: () => {
+        const amount = (document.getElementById('swal-amount') as HTMLInputElement).value;
+        const name = (document.getElementById('swal-name') as HTMLInputElement).value;
+        const card = (document.getElementById('swal-card') as HTMLInputElement).value;
+        const exp = (document.getElementById('swal-exp') as HTMLInputElement).value;
+        const cvv = (document.getElementById('swal-cvv') as HTMLInputElement).value;
+
+        if (!amount || !name || !card || !exp || !cvv) {
+          Swal.showValidationMessage('Por favor, completa todos los campos de la tarjeta');
+          return null;
+        }
+        if (Number(amount) <= 0) {
+          Swal.showValidationMessage('El monto de recarga debe ser mayor a 0');
+          return null;
+        }
+
+        return { amount: Number(amount), fullName: name, cardNumber: card, expirationDate: exp, cvv };
+      }
+    });
+
+    if (formValues) {
+      try {
+        MySwal.fire({
+          title: 'Procesando...',
+          text: 'Conectando con SnailPay',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        const response = await fetch('http://localhost:3000/api/snailpay/recharge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            ...formValues
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message || 'Error en el pago');
+
+        // Actualizamos nuestro estado local de React y el LocalStorage
+        const newBalance = user.balance + formValues.amount;
+        authService.updateBalance(newBalance);
+        setUser({ ...user, balance: newBalance });
+
+        MySwal.fire('¡Éxito!', `Se han recargado $${formValues.amount} a tu cuenta.`, 'success');
+
+      } catch (error: any) {
+        MySwal.fire('Error', error.message, 'error');
+      }
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -48,9 +147,21 @@ export default function Dashboard() {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <Link to="/" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '600' }}>
-            <h3 style={{ margin: 0, color: '#10b981', fontSize: '1rem' }}>Cargar saldo...</h3>
-          </Link>
+          <button 
+            onClick={handleSnailPay} 
+            style={{ 
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              margin: 0,
+              color: '#10b981', 
+              fontSize: '1rem', 
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Cargar saldo...
+          </button>
         </div>
       </div>
 
@@ -74,7 +185,7 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value} apuestas`, 'Cantidad']} />
+                <Tooltip formatter={(value: any) => [`${value} apuestas`, 'Cantidad']} />
                 <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
