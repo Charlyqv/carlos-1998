@@ -12,7 +12,7 @@ export default function Layout({ onLogout }: LayoutProps) {
   const user = userRaw ? JSON.parse(userRaw) : { name: 'Usuario' };
 
   const navItems = [
-    { path: '/', label: '📊 Rendimiento del Servidor' },
+    { path: '/', label: '📊 Información sobre tus apuestas' },
     { path: '/tasks', label: '✅ Gestión de Tareas' },
   ];
 
@@ -60,7 +60,7 @@ export default function Layout({ onLogout }: LayoutProps) {
           </h3>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <span style={{ color: '#64748b', fontSize: '0.95rem' }}>Hola, <strong>{user.name}</strong></span>
+            <span style={{ color: '#64748b', fontSize: '0.95rem' }}>Bienvenido</span>
             <button 
               onClick={onLogout}
               style={{ padding: '0.5rem 1rem', backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', transition: 'background 0.2s' }}

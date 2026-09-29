@@ -10,6 +10,7 @@ interface RegisterProps {
 export default function Register({ onRegisterSuccess }: RegisterProps) {
     const navigate = useNavigate();
 
+    const [id, setId] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

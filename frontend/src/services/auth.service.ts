@@ -1,4 +1,5 @@
 export interface User {
+  id: string;
   name: string;
   email: string;
   balance: number;
@@ -24,6 +25,7 @@ export const authService = {
     }
 
     const newUser = {
+      id: crypto.randomUUID(),
       name,
       email,
       password,
@@ -40,7 +42,7 @@ export const authService = {
     
     if (!user) throw new Error('Credenciales incorrectas');
 
-    const userData: User = { name: user.name, email: user.email, balance: user.balance };
+    const userData: User = { id: user.id, name: user.name, email: user.email, balance: user.balance };
     localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
     return userData;
   },
