@@ -4,7 +4,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 import { authService, type User } from '../services/auth.service';
-// import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -70,12 +69,32 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      `,
+          `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Procesar Pago',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#10b981',
+
+      didOpen: () => {
+        const expInput = document.getElementById('swal-exp') as HTMLInputElement;
+        
+        expInput.addEventListener('input', (e: any) => {
+          let value = e.target.value.replace(/\D/g, ''); 
+          
+          if (value.length >= 2) {
+
+            let month = parseInt(value.substring(0, 2), 10);
+            if (month > 12) value = '12' + value.substring(2);
+            if (month === 0) value = '01' + value.substring(2);
+            
+            if (value.length > 2) {
+              value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+          }
+          e.target.value = value;
+        });
+      },
       preConfirm: () => {
         const amount = (document.getElementById('swal-amount') as HTMLInputElement).value;
         const name = (document.getElementById('swal-name') as HTMLInputElement).value;
@@ -87,6 +106,30 @@ export default function Dashboard() {
           Swal.showValidationMessage('Por favor, completa todos los campos de la tarjeta');
           return null;
         }
+
+        if (exp.length !== 5) {
+          Swal.showValidationMessage('Formato de fecha inválido. Usa MM/YY');
+          return null;
+        }
+
+        const [monthStr, yearStr] = exp.split('/');
+        const expMonth = parseInt(monthStr, 10);
+        const expYear = parseInt(yearStr, 10) + 2000;
+
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        if (expYear < currentYear) {
+          Swal.showValidationMessage('La tarjeta está vencida (año expirado)');
+          return null;
+        }
+        
+        if (expYear === currentYear && expMonth < currentMonth) {
+          Swal.showValidationMessage('La tarjeta está vencida (mes expirado)');
+          return null;
+        }
+
         if (Number(amount) <= 0) {
           Swal.showValidationMessage('El monto de recarga debe ser mayor a 0');
           return null;
@@ -119,7 +162,6 @@ export default function Dashboard() {
 
         if (!response.ok) throw new Error(data.message || 'Error en el pago');
 
-        // Actualizamos nuestro estado local de React y el LocalStorage
         const newBalance = user.balance + formValues.amount;
         authService.updateBalance(newBalance);
         setUser({ ...user, balance: newBalance });

@@ -12,8 +12,7 @@ export default function Layout({ onLogout }: LayoutProps) {
   const user = userRaw ? JSON.parse(userRaw) : { name: 'Usuario' };
 
   const navItems = [
-    { path: '/', label: '📊 Información sobre tus apuestas' },
-    { path: '/tasks', label: '✅ Gestión de Tareas' },
+    { path: '/', label: '📊 Información sobre tus apuestas' }
   ];
 
   return (

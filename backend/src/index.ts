@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import raceRoutes from './routes/race.routes';
+import snailpayRoutes from './routes/snailpay.routes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.use('/api/races', raceRoutes);
+app.use('/api/snailpay', snailpayRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
