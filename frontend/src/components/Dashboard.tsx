@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 import { authService, type User } from '../services/auth.service';
+import { transactionService } from '../services/transaction.service';
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -160,16 +161,49 @@ export default function Dashboard() {
 
         const data = await response.json();
 
-        if (!response.ok) throw new Error(data.message || 'Error en el pago');
+        if (!data.status) {
+            throw new Error('No se pudo conectar con SnailPay.');
+        }
 
-        const newBalance = user.balance + formValues.amount;
-        authService.updateBalance(newBalance);
-        setUser({ ...user, balance: newBalance });
+        transactionService.saveTransaction(data);
 
-        MySwal.fire('¡Éxito!', `Se han recargado $${formValues.amount} a tu cuenta.`, 'success');
+        if (data.status === 'approved') {
+
+          const newBalance = user.balance + formValues.amount;
+          authService.updateBalance(newBalance);
+          setUser({ ...user, balance: newBalance });
+
+          MySwal.fire({
+            icon: 'success',
+            title: '¡Recarga Exitosa!',
+            text: `Se han abonado $${formValues.amount} a tu cuenta.`,
+            footer: `Autorización: ${data.authorization_code}`
+          });
+
+        } else if (data.status === 'rejected') {
+
+          let reason = 'Tu tarjeta fue declinada por el banco.';
+          if (data.status_detail === 'insufficient_funds') reason = 'Fondos insuficientes en la cuenta.';
+          if (data.status_detail === 'fraud_suspected') reason = 'Transacción bloqueada por posible fraude.';
+          
+          MySwal.fire({
+            icon: 'warning',
+            title: 'Pago Declinado',
+            text: reason
+          });
+
+        } else if (data.status === 'error') {
+
+          MySwal.fire({
+            icon: 'error',
+            title: 'Error del Sistema',
+            text: 'SnailPay está experimentando problemas técnicos. Intenta más tarde.'
+          });
+          
+        }
 
       } catch (error: any) {
-        MySwal.fire('Error', error.message, 'error');
+        MySwal.fire('Error de Conexión', error.message, 'error');
       }
     }
   };
