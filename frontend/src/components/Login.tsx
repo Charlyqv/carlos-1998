@@ -22,7 +22,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setLoading(true);
 
     try {
-        const user = authService.login(email, password);
+        authService.login(email, password);
 
         setSuccessMessage('Inicio de sesión exitoso. Redirigiendo...');
         
@@ -32,9 +32,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         }, 1500);
 
     } catch (error: any) {
-        // 3. Si el servicio detecta que la contraseña está mal, lanza un error y cae aquí
         console.error(error.message);
-        setError(error.message); // Muestras el mensaje rojo en pantalla
+        setError(error.message);
+    } finally {
+        setLoading(false);
     }
 };
 
