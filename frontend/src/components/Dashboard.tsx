@@ -148,7 +148,7 @@ export default function Dashboard() {
           didOpen: () => { Swal.showLoading(); }
         });
 
-        const response = await fetch('https://api-caracoles.onrender.com', { // url para funcionamiento en la nube 
+        const response = await fetch('https://api-caracoles.onrender.com/api/snailpay/recharge', { // url para funcionamiento en la nube 
         // const response = await fetch('http://localhost:3000/api/snailpay/recharge', { // url para funcionamiento local
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
