@@ -11,7 +11,6 @@ import withReactContent from 'sweetalert2-react-content'
 export default function Dashboard() {
 
   const [user, setUser] = useState<User | null>(null);
-  const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -257,7 +256,7 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {betsData.map((entry, index) => (
+                  {betsData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
                   ))}
                 </Pie>

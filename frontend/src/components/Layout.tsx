@@ -9,7 +9,7 @@ export default function Layout({ onLogout }: LayoutProps) {
 
   // Recuperamos el nombre del usuario para el Navbar
   const userRaw = localStorage.getItem('app_session');
-  const user = userRaw ? JSON.parse(userRaw) : { name: 'Usuario' };
+  userRaw ? JSON.parse(userRaw) : { name: 'Usuario' };
 
   const navItems = [
     { path: '/', label: '📊 Información sobre tus apuestas' }
