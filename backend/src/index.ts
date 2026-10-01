@@ -1,6 +1,5 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import raceRoutes from './routes/race.routes';
 import snailpayRoutes from './routes/snailpay.routes';
 
 const app: Application = express();
@@ -13,7 +12,6 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'Servidor funcionando correctamente' });
 });
 
-app.use('/api/races', raceRoutes);
 app.use('/api/snailpay', snailpayRoutes);
 
 app.listen(PORT, () => {

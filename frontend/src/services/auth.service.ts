@@ -1,3 +1,5 @@
+import SHA256 from 'crypto-js/sha256';
+
 export interface User {
   id: string;
   name: string;
@@ -24,11 +26,13 @@ export const authService = {
       throw new Error('Este correo electrónico ya está registrado.');
     }
 
+    const hashedPassword = SHA256(password).toString();
+
     const newUser = {
       id: crypto.randomUUID(),
       name,
       email,
-      password,
+      password: hashedPassword,
       balance: 0
     };
 
@@ -38,7 +42,10 @@ export const authService = {
 
   login: (email: string, password: string): User => {
     const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-    const user = users.find((u: any) => u.email === email && u.password === password);
+    
+    const hashedAttempt = SHA256(password).toString();
+
+    const user = users.find((u: any) => u.email === email && u.password === hashedAttempt);
     
     if (!user) throw new Error('Credenciales incorrectas');
 

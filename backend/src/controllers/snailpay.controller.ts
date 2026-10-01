@@ -66,10 +66,4 @@ export const processRecharge = async (req: Request, res: Response): Promise<any>
   };
 
   return res.status(200).json(successResponse);
-  // return res.status(200).json({
-  //   status: 'success',
-  //   message: 'Recarga aprobada por SnailPay',
-  //   transactionId: crypto.randomUUID(),
-  //   processedAmount: amount
-  // });
 };
